@@ -1,25 +1,58 @@
 {
   "expo": {
-    "name": "loop-crochet",
+    "name": "Loop",
     "slug": "loop-crochet",
+    "scheme": "loop",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.rzayev.loop-crochet",
+      "buildNumber": "1"
     },
     "android": {
+      "package": "com.rzayev.loopcrochet",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#C85D4D",
         "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "backgroundColor": "#FBF4EA"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Loop needs access to your photos so you can add pictures of your projects and yarn.",
+          "cameraPermission": "Loop needs camera access so you can snap a photo of your projects and yarn."
+        }
+      ],
+      "expo-font"
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "d744c182-4478-40dc-ac0e-ee128c850f05"
+      }
+    },
+    "owner": "rzayev558"
   }
 }
