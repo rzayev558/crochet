@@ -55,9 +55,11 @@ Secondary: Utilities
 4+
 
 ## Support & marketing URLs
-Support URL:  https://YOURDOMAIN/loop/support
-Marketing URL: https://YOURDOMAIN/loop
-Privacy Policy URL: https://YOURDOMAIN/loop/privacy   (host store/privacy-policy.md)
+Support URL:   https://rzayev558.github.io/crochet/support/
+Marketing URL: https://rzayev558.github.io/crochet/
+Privacy Policy URL: https://rzayev558.github.io/crochet/privacy/
+
+All three are served by GitHub Pages from the `docs/` folder of this repo.
 
 ## App Privacy answers (nutrition label)
 Data collection: NONE. Loop stores everything on-device and has no analytics,

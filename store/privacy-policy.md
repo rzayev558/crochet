@@ -34,4 +34,9 @@ If this policy changes, we'll update the date above and post the new version at
 this URL.
 
 ## Contact
-Questions? Email YOUR_SUPPORT_EMAIL.
+Questions? Email rzayev558@gmail.com.
+
+---
+
+_Published at https://rzayev558.github.io/crochet/privacy/ — the live copy lives in
+`docs/privacy/index.html`. Edit both together._
