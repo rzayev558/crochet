@@ -4,9 +4,11 @@ import { useRouter } from "expo-router";
 import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useEntitlements } from "../src/entitlements/store";
+import { LangPref, useLanguage, useT } from "../src/i18n";
 import { colors, radius, shadow, spacing, type } from "../src/theme";
 
 export default function Settings() {
+  const t = useT();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const isPlus = useEntitlements((s) => s.isPlus);
@@ -14,11 +16,22 @@ export default function Settings() {
   const restore = useEntitlements((s) => s.restore);
   const devSetPlus = useEntitlements((s) => s.devSetPlus);
 
+  const langPref = useLanguage((s) => s.pref);
+  const setLangPref = useLanguage((s) => s.setPref);
+
+  const LANG_OPTIONS: { value: LangPref; label: string }[] = [
+    { value: "system", label: t("language.system") },
+    { value: "en", label: t("language.en") },
+    { value: "de", label: t("language.de") },
+  ];
+
   const onRestore = async () => {
     const res = await restore();
     Alert.alert(
-      res.ok ? "Restored" : "Nothing to restore",
-      res.ok ? "Loop Plus is active again." : res.error ?? "No previous purchase was found."
+      res.ok ? t("settings.restoredTitle") : t("settings.nothingRestoreTitle"),
+      res.ok
+        ? t("settings.restoredBody")
+        : res.error ?? t("settings.nothingRestoreBody")
     );
   };
 
@@ -35,48 +48,61 @@ export default function Settings() {
             size={24}
             color={isPlus ? colors.sage : colors.primary}
           />
-          <Text style={styles.statusTitle}>{isPlus ? "Loop Plus" : "Free plan"}</Text>
+          <Text style={styles.statusTitle}>{isPlus ? t("settings.loopPlus") : t("settings.freePlan")}</Text>
         </View>
         <Text style={styles.statusSub}>
-          {isPlus
-            ? "Everything's unlocked. Thanks for supporting Loop!"
-            : "Upgrade to remove all limits and unlock every feature."}
+          {isPlus ? t("settings.plusStatusSub") : t("settings.freeStatusSub")}
         </Text>
         {!isPlus && (
           <Pressable style={styles.upgradeBtn} onPress={() => router.push("/paywall")}>
-            <Text style={styles.upgradeText}>Upgrade to Loop Plus</Text>
+            <Text style={styles.upgradeText}>{t("settings.upgradeCta")}</Text>
           </Pressable>
         )}
       </View>
 
+      {/* Language */}
+      <Text style={styles.sectionLabel}>{t("settings.language")}</Text>
+      <View style={styles.langCard}>
+        {LANG_OPTIONS.map((opt, i) => {
+          const active = langPref === opt.value;
+          return (
+            <Pressable
+              key={opt.value}
+              style={[styles.langRow, i > 0 && styles.langRowBorder]}
+              onPress={() => setLangPref(opt.value)}
+            >
+              <Text style={[styles.langLabel, active && styles.langLabelActive]}>{opt.label}</Text>
+              {active && <Ionicons name="checkmark" size={20} color={colors.primary} />}
+            </Pressable>
+          );
+        })}
+      </View>
+
       <Pressable style={styles.row} onPress={onRestore}>
         <Ionicons name="refresh" size={20} color={colors.text} />
-        <Text style={styles.rowText}>Restore purchases</Text>
+        <Text style={styles.rowText}>{t("settings.restore")}</Text>
         <Ionicons name="chevron-forward" size={18} color={colors.textFaint} />
       </Pressable>
 
       {/* Dev tools — only when running without a real RevenueCat key. */}
       {source === "dev" && (
         <>
-          <Text style={styles.sectionLabel}>Developer</Text>
+          <Text style={styles.sectionLabel}>{t("settings.developer")}</Text>
           <View style={styles.row}>
             <Ionicons name="construct-outline" size={20} color={colors.text} />
-            <Text style={styles.rowText}>Simulate Loop Plus</Text>
+            <Text style={styles.rowText}>{t("settings.simulatePlus")}</Text>
             <Switch
               value={isPlus}
               onValueChange={devSetPlus}
               trackColor={{ true: colors.sage, false: colors.borderStrong }}
             />
           </View>
-          <Text style={styles.devHint}>
-            No RevenueCat key set, so purchases are simulated locally. Add a key in
-            src/entitlements/config.ts and build natively for real subscriptions.
-          </Text>
+          <Text style={styles.devHint}>{t("settings.devHint")}</Text>
         </>
       )}
 
       <Text style={styles.version}>
-        Loop v{Constants.expoConfig?.version ?? "1.0.0"}
+        {t("settings.version", { version: Constants.expoConfig?.version ?? "1.0.0" })}
       </Text>
     </ScrollView>
   );
@@ -117,6 +143,25 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   rowText: { flex: 1, fontSize: type.body, fontWeight: "600", color: colors.text },
+
+  langCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: "hidden",
+    marginTop: spacing.xs,
+  },
+  langRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+  },
+  langRowBorder: { borderTopWidth: 1, borderTopColor: colors.border },
+  langLabel: { fontSize: type.body, fontWeight: "600", color: colors.text },
+  langLabelActive: { color: colors.primary, fontWeight: "700" },
 
   sectionLabel: {
     fontSize: type.label,

@@ -6,10 +6,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { patternsQuery } from "../../src/db/queries";
 import { FREE_LIMITS } from "../../src/entitlements/limits";
 import { useEntitlements } from "../../src/entitlements/store";
+import { useT } from "../../src/i18n";
 import { colors, radius, shadow, spacing, type } from "../../src/theme";
 import { EmptyState, Fab, FreeLimitBar } from "../../src/ui";
 
 export default function PatternsTab() {
+  const t = useT();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const isPlus = useEntitlements((s) => s.isPlus);
@@ -30,15 +32,15 @@ export default function PatternsTab() {
         <FreeLimitBar
           used={count}
           limit={FREE_LIMITS.patterns}
-          label="patterns"
+          label={t("units.patterns")}
           onUpgrade={() => router.push("/paywall?reason=patterns")}
         />
       )}
       {(patterns?.length ?? 0) === 0 ? (
         <EmptyState
           emoji="📋"
-          title="Pattern library"
-          body="Save the patterns you're working from — import a PDF, snap a photo of a page, or keep a link. Everything in one place, offline."
+          title={t("patterns.emptyTitle")}
+          body={t("patterns.emptyBody")}
         />
       ) : (
         <FlatList
@@ -64,7 +66,9 @@ export default function PatternsTab() {
                 </Text>
                 <View style={styles.metaRow}>
                   <View style={styles.craftBadge}>
-                    <Text style={styles.craftText}>{item.craft === "knit" ? "Knit" : "Crochet"}</Text>
+                    <Text style={styles.craftText}>
+                      {item.craft === "knit" ? t("craft.knit") : t("craft.crochet")}
+                    </Text>
                   </View>
                   {item.fileName ? (
                     <Text style={styles.sub} numberOfLines={1}>
@@ -72,7 +76,7 @@ export default function PatternsTab() {
                     </Text>
                   ) : item.sourceUrl ? (
                     <Text style={styles.sub} numberOfLines={1}>
-                      Link
+                      {t("patterns.link")}
                     </Text>
                   ) : null}
                 </View>
@@ -82,7 +86,7 @@ export default function PatternsTab() {
           )}
         />
       )}
-      <Fab label="Add pattern" onPress={addPattern} bottom={insets.bottom + spacing.lg} />
+      <Fab label={t("patterns.addPattern")} onPress={addPattern} bottom={insets.bottom + spacing.lg} />
     </View>
   );
 }

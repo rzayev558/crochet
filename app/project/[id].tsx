@@ -5,10 +5,8 @@ import { useEffect, useRef, useState } from "react";
 import {
   Alert,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -21,10 +19,13 @@ import {
 } from "../../src/db/queries";
 import { FREE_LIMITS } from "../../src/entitlements/limits";
 import { useEntitlements } from "../../src/entitlements/store";
+import { useT } from "../../src/i18n";
+import { KeyboardAwareScrollView, KeyboardAwareTextInput } from "../../src/keyboard";
 import { colors, radius, shadow, spacing, type } from "../../src/theme";
 import { GhostButton, PhotoPicker } from "../../src/ui";
 
 export default function ProjectDetail() {
+  const t = useT();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -40,7 +41,7 @@ export default function ProjectDetail() {
       router.push("/paywall?reason=countersPerProject");
       return;
     }
-    const cid = createCounter(id, `Counter ${n}`);
+    const cid = createCounter(id, t("project.counterDefault", { n }));
     router.push(`/counter/${cid}`);
   };
 
@@ -61,7 +62,7 @@ export default function ProjectDetail() {
   const finished = project.status === "finished";
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={{ padding: spacing.md, paddingBottom: insets.bottom + spacing.xl }}>
+    <KeyboardAwareScrollView style={styles.screen} contentContainerStyle={{ padding: spacing.md, paddingBottom: insets.bottom + spacing.xl }}>
       <Stack.Screen options={{ title: "" }} />
 
       <PhotoPicker
@@ -69,12 +70,12 @@ export default function ProjectDetail() {
         onChange={(uri) => updateProject(id, { photoUri: uri })}
       />
 
-      <TextInput
+      <KeyboardAwareTextInput
         style={styles.nameInput}
         value={name}
         onChangeText={setName}
         onEndEditing={() => updateProject(id, { name })}
-        placeholder="Project name"
+        placeholder={t("project.namePlaceholder")}
         placeholderTextColor={colors.textFaint}
       />
 
@@ -88,21 +89,21 @@ export default function ProjectDetail() {
           color={finished ? colors.sage : colors.textMuted}
         />
         <Text style={[styles.statusText, finished && { color: colors.sage }]}>
-          {finished ? "Finished" : "In progress"}
+          {finished ? t("project.finished") : t("project.inProgress")}
         </Text>
       </Pressable>
 
       {/* Counters */}
       <View style={styles.sectionHead}>
-        <Text style={styles.sectionTitle}>Counters</Text>
+        <Text style={styles.sectionTitle}>{t("project.counters")}</Text>
         <Pressable onPress={addCounter} hitSlop={10} style={styles.addCounter}>
           <Ionicons name="add" size={20} color={colors.primary} />
-          <Text style={styles.addCounterText}>Add</Text>
+          <Text style={styles.addCounterText}>{t("common.add")}</Text>
         </Pressable>
       </View>
 
       {(counters?.length ?? 0) === 0 ? (
-        <Text style={styles.hint}>No counters yet. Add one to start counting rows.</Text>
+        <Text style={styles.hint}>{t("project.noCounters")}</Text>
       ) : (
         counters!.map((c) => (
           <Pressable
@@ -113,7 +114,9 @@ export default function ProjectDetail() {
             <View style={{ flex: 1 }}>
               <Text style={styles.counterName}>{c.name}</Text>
               <Text style={styles.counterSub}>
-                {c.target ? `${c.count} of ${c.target}` : `${c.count} rows`}
+                {c.target
+                  ? t("project.counterOfTarget", { count: c.count, target: c.target })
+                  : t("project.counterRows", { count: c.count })}
               </Text>
             </View>
             <View style={styles.countPill}>
@@ -124,26 +127,26 @@ export default function ProjectDetail() {
       )}
 
       {/* Notes */}
-      <Text style={[styles.sectionTitle, { marginTop: spacing.lg }]}>Notes</Text>
-      <TextInput
+      <Text style={[styles.sectionTitle, { marginTop: spacing.lg }]}>{t("project.notes")}</Text>
+      <KeyboardAwareTextInput
         style={styles.notes}
         value={notes}
         onChangeText={setNotes}
         onEndEditing={() => updateProject(id, { notes })}
         multiline
-        placeholder="Hook size, gauge, modifications…"
+        placeholder={t("project.notesPlaceholder")}
         placeholderTextColor={colors.textFaint}
       />
 
       <GhostButton
-        label="Delete project"
+        label={t("project.delete")}
         danger
         style={{ marginTop: spacing.xl }}
         onPress={() =>
-          Alert.alert("Delete project?", `"${project.name}" and its counters will be removed.`, [
-            { text: "Cancel", style: "cancel" },
+          Alert.alert(t("project.deleteTitle"), t("project.deleteBody", { name: project.name }), [
+            { text: t("common.cancel"), style: "cancel" },
             {
-              text: "Delete",
+              text: t("common.delete"),
               style: "destructive",
               onPress: () => {
                 deleteProject(id);
@@ -153,7 +156,7 @@ export default function ProjectDetail() {
           ])
         }
       />
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }
 

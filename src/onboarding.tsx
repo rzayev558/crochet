@@ -10,29 +10,19 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useT } from "./i18n";
 import { colors, radius, spacing, type } from "./theme";
 
 const { width } = Dimensions.get("window");
 
 const SLIDES = [
-  {
-    emoji: "👆",
-    title: "Never lose your place",
-    body: "A giant tap-to-count button with a gentle buzz on every row. The screen stays awake while your hands are busy.",
-  },
-  {
-    emoji: "🧶",
-    title: "A home for every project",
-    body: "Group counters, notes and a photo for each thing you're making — sweaters, blankets, granny squares.",
-  },
-  {
-    emoji: "🧵",
-    title: "Your stash & patterns",
-    body: "Catalogue every skein and keep your patterns in one place. All offline, always with you.",
-  },
-];
+  { emoji: "👆", title: "onboarding.slide1.title", body: "onboarding.slide1.body" },
+  { emoji: "🧶", title: "onboarding.slide2.title", body: "onboarding.slide2.body" },
+  { emoji: "🧵", title: "onboarding.slide3.title", body: "onboarding.slide3.body" },
+] as const;
 
 export function Onboarding({ onDone }: { onDone: () => void }) {
+  const t = useT();
   const insets = useSafeAreaInsets();
   const scroller = useRef<ScrollView>(null);
   const [page, setPage] = useState(0);
@@ -56,7 +46,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
     <View style={styles.screen}>
       <View style={{ height: insets.top }} />
       <Pressable style={styles.skip} onPress={onDone}>
-        <Text style={styles.skipText}>{isLast ? "" : "Skip"}</Text>
+        <Text style={styles.skipText}>{isLast ? "" : t("onboarding.skip")}</Text>
       </Pressable>
 
       <ScrollView
@@ -73,8 +63,8 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
             <View style={styles.badge}>
               <Text style={styles.emoji}>{s.emoji}</Text>
             </View>
-            <Text style={styles.title}>{s.title}</Text>
-            <Text style={styles.body}>{s.body}</Text>
+            <Text style={styles.title}>{t(s.title)}</Text>
+            <Text style={styles.body}>{t(s.body)}</Text>
           </View>
         ))}
       </ScrollView>
@@ -87,7 +77,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.lg }]}>
         <Pressable style={styles.cta} onPress={next}>
-          <Text style={styles.ctaText}>{isLast ? "Start counting" : "Next"}</Text>
+          <Text style={styles.ctaText}>{isLast ? t("onboarding.start") : t("onboarding.next")}</Text>
         </Pressable>
       </View>
     </View>

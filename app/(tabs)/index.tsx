@@ -8,10 +8,12 @@ import { counters } from "../../src/db/schema";
 import { createProject, projectsQuery } from "../../src/db/queries";
 import { FREE_LIMITS } from "../../src/entitlements/limits";
 import { useEntitlements } from "../../src/entitlements/store";
+import { useT } from "../../src/i18n";
 import { colors, radius, shadow, spacing, type } from "../../src/theme";
 import { EmptyState, Fab, FreeLimitBar } from "../../src/ui";
 
 export default function ProjectsTab() {
+  const t = useT();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const isPlus = useEntitlements((s) => s.isPlus);
@@ -32,7 +34,7 @@ export default function ProjectsTab() {
       router.push("/paywall?reason=projects");
       return;
     }
-    const id = createProject("New project");
+    const id = createProject(t("projects.new"));
     router.push(`/project/${id}`);
   };
 
@@ -42,15 +44,15 @@ export default function ProjectsTab() {
         <FreeLimitBar
           used={count}
           limit={FREE_LIMITS.projects}
-          label="projects"
+          label={t("units.projects")}
           onUpgrade={() => router.push("/paywall?reason=projects")}
         />
       )}
       {(projects?.length ?? 0) === 0 ? (
         <EmptyState
           emoji="🧶"
-          title="Start a project"
-          body="Group your counters, notes and a photo for each thing you're making — a sweater, a blanket, a granny square."
+          title={t("projects.emptyTitle")}
+          body={t("projects.emptyBody")}
         />
       ) : (
         <FlatList
@@ -72,11 +74,13 @@ export default function ProjectsTab() {
                 </Text>
                 <Text style={styles.sub}>
                   {(countByProject[item.id] ?? 0)}{" "}
-                  {(countByProject[item.id] ?? 0) === 1 ? "counter" : "counters"}
+                  {(countByProject[item.id] ?? 0) === 1
+                    ? t("projects.counterOne")
+                    : t("projects.counterOther")}
                 </Text>
                 {item.status === "finished" && (
                   <View style={styles.badge}>
-                    <Text style={styles.badgeText}>Finished</Text>
+                    <Text style={styles.badgeText}>{t("projects.finished")}</Text>
                   </View>
                 )}
               </View>
@@ -85,7 +89,7 @@ export default function ProjectsTab() {
           )}
         />
       )}
-      <Fab label="New project" onPress={addProject} bottom={insets.bottom + spacing.lg} />
+      <Fab label={t("projects.new")} onPress={addProject} bottom={insets.bottom + spacing.lg} />
     </View>
   );
 }

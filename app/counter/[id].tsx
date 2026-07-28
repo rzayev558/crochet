@@ -6,7 +6,9 @@ import { useEffect, useRef, useState } from "react";
 import {
   Alert,
   Animated,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -20,11 +22,13 @@ import {
   setCount as persistCount,
   updateCounter,
 } from "../../src/db/queries";
+import { useT } from "../../src/i18n";
 import { colors, radius, shadow, spacing, type } from "../../src/theme";
 
 export default function CounterScreen() {
   useKeepAwake(); // don't let the screen lock mid-project
 
+  const t = useT();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -48,7 +52,7 @@ export default function CounterScreen() {
   if (!counter) {
     return (
       <View style={styles.screen}>
-        <Text style={styles.gone}>This counter no longer exists.</Text>
+        <Text style={styles.gone}>{t("counter.gone")}</Text>
       </View>
     );
   }
@@ -94,7 +98,7 @@ export default function CounterScreen() {
           title: counter.name,
           headerRight: () => (
             <Pressable onPress={() => setSettingsOpen(true)} hitSlop={12}>
-              <Text style={styles.headerBtn}>Edit</Text>
+              <Text style={styles.headerBtn}>{t("common.edit")}</Text>
             </Pressable>
           ),
         }}
@@ -105,12 +109,12 @@ export default function CounterScreen() {
           <Text style={styles.count}>{value}</Text>
           <Text style={styles.countCaption}>
             {atGoal
-              ? "Goal reached 🎉"
+              ? t("counter.goalReached")
               : target
-              ? `of ${target}`
+              ? t("counter.ofTarget", { target })
               : step > 1
-              ? `+${step} per tap`
-              : "tap anywhere to count"}
+              ? t("counter.perTap", { step })
+              : t("counter.tapHint")}
           </Text>
         </Animated.View>
       </Pressable>
@@ -127,16 +131,16 @@ export default function CounterScreen() {
       )}
 
       <View style={[styles.controls, { paddingBottom: insets.bottom + spacing.md }]}>
-        <Pressable style={[styles.ctrl, styles.ctrlGhost]} onPress={down} accessibilityLabel="Subtract">
+        <Pressable style={[styles.ctrl, styles.ctrlGhost]} onPress={down} accessibilityLabel={t("counter.subtract")}>
           <Text style={styles.ctrlGhostText}>−</Text>
         </Pressable>
         <Pressable
           style={[styles.ctrl, styles.ctrlWide, styles.ctrlGhost]}
           onPress={() =>
-            Alert.alert("Reset to zero?", `"${counter.name}" will go back to 0.`, [
-              { text: "Cancel", style: "cancel" },
+            Alert.alert(t("counter.resetTitle"), t("counter.resetBody", { name: counter.name }), [
+              { text: t("common.cancel"), style: "cancel" },
               {
-                text: "Reset",
+                text: t("common.reset"),
                 style: "destructive",
                 onPress: () => {
                   setCountLocal(0);
@@ -147,9 +151,9 @@ export default function CounterScreen() {
             ])
           }
         >
-          <Text style={styles.ctrlGhostText}>Reset</Text>
+          <Text style={styles.ctrlGhostText}>{t("common.reset")}</Text>
         </Pressable>
-        <Pressable style={[styles.ctrl, styles.ctrlPrimary]} onPress={up} accessibilityLabel="Add">
+        <Pressable style={[styles.ctrl, styles.ctrlPrimary]} onPress={up} accessibilityLabel={t("counter.add")}>
           <Text style={styles.ctrlPrimaryText}>+</Text>
         </Pressable>
       </View>
@@ -178,6 +182,7 @@ function SettingsSheet({
   onClose: () => void;
   onDeleted: () => void;
 }) {
+  const t = useT();
   const [name, setName] = useState(counter.name);
   const [step, setStep] = useState(String(counter.step));
   const [target, setTarget] = useState(counter.target ? String(counter.target) : "");
@@ -202,54 +207,61 @@ function SettingsSheet({
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose}>
-        <Pressable style={styles.sheet} onPress={() => {}}>
-          <Text style={styles.sheetTitle}>Counter settings</Text>
+      {/* The modal fills the screen and has no header, so the sheet can simply
+          be lifted by the keyboard's height — no vertical offset needed. */}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <Pressable style={styles.backdrop} onPress={onClose}>
+          <Pressable style={styles.sheet} onPress={() => {}}>
+            <Text style={styles.sheetTitle}>{t("counter.settingsTitle")}</Text>
 
-          <Text style={styles.field}>Name</Text>
-          <TextInput style={styles.input} value={name} onChangeText={setName} />
+            <Text style={styles.field}>{t("counter.name")}</Text>
+            <TextInput style={styles.input} value={name} onChangeText={setName} />
 
-          <View style={styles.twoCol}>
-            <View style={styles.col}>
-              <Text style={styles.field}>Rows per tap</Text>
-              <TextInput style={styles.input} value={step} onChangeText={setStep} keyboardType="number-pad" />
+            <View style={styles.twoCol}>
+              <View style={styles.col}>
+                <Text style={styles.field}>{t("counter.rowsPerTap")}</Text>
+                <TextInput style={styles.input} value={step} onChangeText={setStep} keyboardType="number-pad" />
+              </View>
+              <View style={styles.col}>
+                <Text style={styles.field}>{t("counter.goalOptional")}</Text>
+                <TextInput
+                  style={styles.input}
+                  value={target}
+                  onChangeText={setTarget}
+                  keyboardType="number-pad"
+                  placeholder="—"
+                  placeholderTextColor={colors.textFaint}
+                />
+              </View>
             </View>
-            <View style={styles.col}>
-              <Text style={styles.field}>Goal (optional)</Text>
-              <TextInput
-                style={styles.input}
-                value={target}
-                onChangeText={setTarget}
-                keyboardType="number-pad"
-                placeholder="—"
-                placeholderTextColor={colors.textFaint}
-              />
-            </View>
-          </View>
 
-          <Pressable style={styles.saveBtn} onPress={save}>
-            <Text style={styles.saveBtnText}>Save</Text>
-          </Pressable>
-          <Pressable
-            style={styles.deleteBtn}
-            onPress={() =>
-              Alert.alert("Delete this counter?", `"${counter.name}" will be removed.`, [
-                { text: "Cancel", style: "cancel" },
-                {
-                  text: "Delete",
-                  style: "destructive",
-                  onPress: () => {
-                    deleteCounter(counter.id);
-                    onDeleted();
+            <Pressable style={styles.saveBtn} onPress={save}>
+              <Text style={styles.saveBtnText}>{t("common.save")}</Text>
+            </Pressable>
+            <Pressable
+              style={styles.deleteBtn}
+              onPress={() =>
+                Alert.alert(t("counter.deleteTitle"), t("counter.deleteBody", { name: counter.name }), [
+                  { text: t("common.cancel"), style: "cancel" },
+                  {
+                    text: t("common.delete"),
+                    style: "destructive",
+                    onPress: () => {
+                      deleteCounter(counter.id);
+                      onDeleted();
+                    },
                   },
-                },
-              ])
-            }
-          >
-            <Text style={styles.deleteBtnText}>Delete counter</Text>
+                ])
+              }
+            >
+              <Text style={styles.deleteBtnText}>{t("counter.delete")}</Text>
+            </Pressable>
           </Pressable>
         </Pressable>
-      </Pressable>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

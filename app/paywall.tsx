@@ -1,42 +1,81 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { DEV_PRICES, LIMIT_COPY, LimitKind, PLUS_BENEFITS } from "../src/entitlements/limits";
+import { DEV_PRICES, LimitKind } from "../src/entitlements/limits";
 import { PurchasePackage, useEntitlements } from "../src/entitlements/store";
+import { useT } from "../src/i18n";
+import { PRIVACY_URL, TERMS_URL } from "../src/legal";
 import { colors, radius, shadow, spacing, type } from "../src/theme";
 import { PrimaryButton } from "../src/ui";
 
+/** Maps a limit reason to the plural unit key used in the "reached limit" copy. */
+const REASON_UNIT: Record<LimitKind, "units.projects" | "units.counters" | "units.yarns" | "units.patterns"> = {
+  projects: "units.projects",
+  countersPerProject: "units.counters",
+  yarns: "units.yarns",
+  patterns: "units.patterns",
+};
+
 export default function Paywall() {
+  const t = useT();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { reason } = useLocalSearchParams<{ reason?: LimitKind }>();
+
+  const benefits = [t("plus.benefit1"), t("plus.benefit2"), t("plus.benefit3")];
 
   const source = useEntitlements((s) => s.source);
   const isPlus = useEntitlements((s) => s.isPlus);
   const rcPackages = useEntitlements((s) => s.packages);
   const purchasing = useEntitlements((s) => s.purchasing);
   const purchase = useEntitlements((s) => s.purchase);
+  const offeringsError = useEntitlements((s) => s.offeringsError);
+  const loadingOfferings = useEntitlements((s) => s.loadingOfferings);
+  const refreshOfferings = useEntitlements((s) => s.refreshOfferings);
 
-  // In dev mode there are no store packages, so show marketing prices.
+  // In dev mode there are no store packages, so show marketing prices. Never
+  // show them in RevenueCat mode — a real price must come from the store.
   const devPackages: PurchasePackage[] = [
     { id: "yearly", title: "Yearly", priceString: DEV_PRICES.yearly, period: "yearly" },
     { id: "monthly", title: "Monthly", priceString: DEV_PRICES.monthly, period: "monthly" },
   ];
-  const packages = source === "revenuecat" && rcPackages.length > 0 ? rcPackages : devPackages;
+  const packages = source === "revenuecat" ? rcPackages : devPackages;
+  const plansUnavailable = packages.length === 0;
 
-  const [selected, setSelected] = useState(
-    packages.find((p) => p.period === "yearly")?.id ?? packages[0]?.id
-  );
+  const [selected, setSelected] = useState<string | undefined>(undefined);
+  // Offerings arrive asynchronously, so fall back to the yearly plan until the
+  // user picks one — and re-derive if the list changes underneath us.
+  const selectedId = packages.some((p) => p.id === selected)
+    ? selected
+    : packages.find((p) => p.period === "yearly")?.id ?? packages[0]?.id;
+
+  const [restoring, setRestoring] = useState(false);
 
   const onContinue = async () => {
-    const pkg = packages.find((p) => p.id === selected);
+    const pkg = packages.find((p) => p.id === selectedId);
     const res = await purchase(pkg);
     if (res.ok) {
       router.back();
     } else if (res.error) {
-      Alert.alert("Couldn't complete purchase", res.error);
+      Alert.alert(t("paywall.purchaseErrorTitle"), res.error);
+    }
+  };
+
+  const onRestore = async () => {
+    if (restoring) return;
+    setRestoring(true);
+    const res = await useEntitlements.getState().restore();
+    setRestoring(false);
+    if (res.ok) {
+      Alert.alert(t("paywall.restoreOkTitle"), t("paywall.restoreOkBody"), [
+        { text: "OK", onPress: () => router.back() },
+      ]);
+    } else if (res.error) {
+      Alert.alert(t("paywall.restoreErrorTitle"), res.error);
+    } else {
+      Alert.alert(t("paywall.restoreNoneTitle"), t("paywall.restoreNoneBody"));
     }
   };
 
@@ -54,20 +93,20 @@ export default function Paywall() {
       />
       <ScrollView contentContainerStyle={{ padding: spacing.lg, paddingBottom: insets.bottom + 140 }}>
         <Text style={styles.hero}>🧶</Text>
-        <Text style={styles.title}>Loop Plus</Text>
+        <Text style={styles.title}>{t("paywall.title")}</Text>
         {isPlus ? (
-          <Text style={styles.subtitle}>You're on Loop Plus — thank you! Everything's unlocked.</Text>
+          <Text style={styles.subtitle}>{t("paywall.alreadyPlus")}</Text>
         ) : (
           <Text style={styles.subtitle}>
-            {reason && LIMIT_COPY[reason]
-              ? `You've reached the free limit for ${LIMIT_COPY[reason].label}. `
+            {reason && REASON_UNIT[reason]
+              ? t("paywall.reachedLimit", { label: t(REASON_UNIT[reason]) })
               : ""}
-            Unlock the whole app with Loop Plus.
+            {t("paywall.unlockAll")}
           </Text>
         )}
 
         <View style={styles.benefits}>
-          {PLUS_BENEFITS.map((b) => (
+          {benefits.map((b) => (
             <View key={b} style={styles.benefitRow}>
               <Ionicons name="checkmark-circle" size={22} color={colors.sage} />
               <Text style={styles.benefitText}>{b}</Text>
@@ -75,10 +114,25 @@ export default function Paywall() {
           ))}
         </View>
 
+        {!isPlus && plansUnavailable && (
+          <>
+            <Text style={styles.unavailable}>{t("paywall.plansUnavailable")}</Text>
+            {/* The copy above tells people to try again, so give them a way to. */}
+            <Pressable onPress={refreshOfferings} style={styles.retry} disabled={loadingOfferings}>
+              <Text style={styles.retryText}>
+                {loadingOfferings ? t("paywall.pleaseWait") : t("paywall.retry")}
+              </Text>
+            </Pressable>
+            {__DEV__ && !!offeringsError && (
+              <Text style={styles.diagnostic}>{offeringsError}</Text>
+            )}
+          </>
+        )}
+
         {!isPlus && (
           <View style={{ marginTop: spacing.lg }}>
             {packages.map((p) => {
-              const active = p.id === selected;
+              const active = p.id === selectedId;
               const best = p.period === "yearly";
               return (
                 <Pressable
@@ -95,13 +149,22 @@ export default function Paywall() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.planTitle}>
-                      {p.period === "yearly" ? "Yearly" : p.period === "monthly" ? "Monthly" : p.title}
+                      {p.period === "yearly" ? t("paywall.yearly") : p.period === "monthly" ? t("paywall.monthly") : p.title}
                     </Text>
-                    <Text style={styles.planPrice}>{p.priceString}</Text>
+                    {/* Guideline 3.1.2: the billing period has to be spelled
+                        out next to the price, not implied by the plan name. */}
+                    <Text style={styles.planPrice}>
+                      {p.priceString}
+                      {p.period === "yearly"
+                        ? ` ${t("paywall.perYear")}`
+                        : p.period === "monthly"
+                          ? ` ${t("paywall.perMonth")}`
+                          : ""}
+                    </Text>
                   </View>
                   {best && (
                     <View style={styles.bestBadge}>
-                      <Text style={styles.bestText}>Best value</Text>
+                      <Text style={styles.bestText}>{t("paywall.bestValue")}</Text>
                     </View>
                   )}
                 </Pressable>
@@ -114,18 +177,28 @@ export default function Paywall() {
       {!isPlus && (
         <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.md }]}>
           {source === "dev" && (
-            <Text style={styles.devNote}>Dev mode — this simulates a purchase, no real charge.</Text>
+            <Text style={styles.devNote}>{t("paywall.devNote")}</Text>
           )}
           <PrimaryButton
-            label={purchasing ? "Please wait…" : "Continue"}
-            onPress={purchasing ? () => {} : onContinue}
+            label={purchasing ? t("paywall.pleaseWait") : t("paywall.continue")}
+            onPress={purchasing || plansUnavailable ? () => {} : onContinue}
           />
-          <Pressable onPress={() => useEntitlements.getState().restore()} style={styles.restore}>
-            <Text style={styles.restoreText}>Restore purchases</Text>
+          <Pressable onPress={onRestore} style={styles.restore} disabled={restoring}>
+            <Text style={styles.restoreText}>
+              {restoring ? t("paywall.pleaseWait") : t("paywall.restore")}
+            </Text>
           </Pressable>
-          <Text style={styles.fine}>
-            Subscriptions renew automatically until cancelled. Manage in your App Store settings.
-          </Text>
+          <Text style={styles.fine}>{t("paywall.fine")}</Text>
+          {/* Guideline 3.1.2 requires both links on the purchase screen. */}
+          <View style={styles.legal}>
+            <Pressable onPress={() => Linking.openURL(TERMS_URL)} hitSlop={8}>
+              <Text style={styles.legalLink}>{t("paywall.terms")}</Text>
+            </Pressable>
+            <Text style={styles.legalDot}>·</Text>
+            <Pressable onPress={() => Linking.openURL(PRIVACY_URL)} hitSlop={8}>
+              <Text style={styles.legalLink}>{t("paywall.privacy")}</Text>
+            </Pressable>
+          </View>
         </View>
       )}
     </View>
@@ -180,5 +253,31 @@ const styles = StyleSheet.create({
   devNote: { textAlign: "center", color: colors.textFaint, fontSize: type.label, marginBottom: spacing.sm },
   restore: { alignItems: "center", paddingVertical: spacing.md },
   restoreText: { color: colors.primary, fontSize: type.body, fontWeight: "700" },
+  unavailable: {
+    textAlign: "center",
+    color: colors.textMuted,
+    fontSize: type.label,
+    lineHeight: 22,
+    marginTop: spacing.lg,
+    paddingHorizontal: spacing.md,
+  },
+  retry: { alignItems: "center", paddingVertical: spacing.md },
+  retryText: { color: colors.primary, fontSize: type.body, fontWeight: "700" },
+  diagnostic: {
+    textAlign: "center",
+    color: colors.textFaint,
+    fontSize: 11,
+    lineHeight: 15,
+    paddingHorizontal: spacing.md,
+  },
+  legal: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: spacing.sm,
+    paddingTop: spacing.sm,
+  },
+  legalLink: { color: colors.textMuted, fontSize: 12, textDecorationLine: "underline" },
+  legalDot: { color: colors.textFaint, fontSize: 12 },
   fine: { textAlign: "center", color: colors.textFaint, fontSize: 12, lineHeight: 16 },
 });

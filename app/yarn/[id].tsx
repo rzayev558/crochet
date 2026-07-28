@@ -1,7 +1,7 @@
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   createYarn,
@@ -9,6 +9,8 @@ import {
   updateYarn,
   yarnByIdQuery,
 } from "../../src/db/queries";
+import { useT } from "../../src/i18n";
+import { KeyboardAwareScrollView } from "../../src/keyboard";
 import { deleteFile } from "../../src/media";
 import { colors, radius, spacing, type } from "../../src/theme";
 import { Chips, Field, GhostButton, PhotoPicker, PrimaryButton, Stepper } from "../../src/ui";
@@ -31,6 +33,7 @@ const SWATCHES = [
 ];
 
 export default function YarnEditor() {
+  const t = useT();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -83,26 +86,26 @@ export default function YarnEditor() {
   };
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={{ padding: spacing.md, paddingBottom: insets.bottom + spacing.xl }}>
-      <Stack.Screen options={{ title: isNew ? "Add yarn" : "Edit yarn" }} />
+    <KeyboardAwareScrollView style={styles.screen} contentContainerStyle={{ padding: spacing.md, paddingBottom: insets.bottom + spacing.xl }}>
+      <Stack.Screen options={{ title: isNew ? t("yarn.addTitle") : t("yarn.editTitle") }} />
 
       <PhotoPicker uri={photoUri} onChange={setPhotoUri} height={160} />
 
-      <Field label="Colorway" value={colorway} onChangeText={setColorway} placeholder="e.g. Dusty Rose" />
-      <Field label="Brand" value={brand} onChangeText={setBrand} placeholder="e.g. Cascade 220" />
+      <Field label={t("yarn.colorway")} value={colorway} onChangeText={setColorway} placeholder={t("yarn.colorwayPlaceholder")} />
+      <Field label={t("yarn.brand")} value={brand} onChangeText={setBrand} placeholder={t("yarn.brandPlaceholder")} />
 
-      <Chips label="Weight" options={WEIGHTS} value={weight} onChange={setWeight} />
+      <Chips label={t("yarn.weight")} options={WEIGHTS} value={weight} onChange={setWeight} />
 
-      <Field label="Fiber" value={fiber} onChangeText={setFiber} placeholder="e.g. 100% merino wool" />
+      <Field label={t("yarn.fiber")} value={fiber} onChangeText={setFiber} placeholder={t("yarn.fiberPlaceholder")} />
 
       <View style={styles.row}>
-        <Stepper label="Skeins" value={skeins} onChange={setSkeins} min={0} />
+        <Stepper label={t("yarn.skeins")} value={skeins} onChange={setSkeins} min={0} />
         <View style={{ flex: 1, marginLeft: spacing.md }}>
-          <Field label="Yards / skein" value={yards} onChangeText={setYards} keyboardType="number-pad" placeholder="—" />
+          <Field label={t("yarn.yardsPerSkein")} value={yards} onChangeText={setYards} keyboardType="number-pad" placeholder="—" />
         </View>
       </View>
 
-      <Text style={styles.swatchLabel}>Colour tag</Text>
+      <Text style={styles.swatchLabel}>{t("yarn.colorTag")}</Text>
       <View style={styles.swatchWrap}>
         {SWATCHES.map((c) => (
           <Pressable
@@ -117,20 +120,20 @@ export default function YarnEditor() {
         ))}
       </View>
 
-      <Field label="Notes" value={notes} onChangeText={setNotes} multiline placeholder="Dye lot, where you bought it…" />
+      <Field label={t("field.notes")} value={notes} onChangeText={setNotes} multiline placeholder={t("yarn.notesPlaceholder")} />
 
-      <PrimaryButton label={isNew ? "Add to stash" : "Save"} onPress={save} style={{ marginTop: spacing.xl }} />
+      <PrimaryButton label={isNew ? t("yarn.addToStash") : t("common.save")} onPress={save} style={{ marginTop: spacing.xl }} />
 
       {!isNew && (
         <GhostButton
-          label="Delete yarn"
+          label={t("yarn.delete")}
           danger
           style={{ marginTop: spacing.sm }}
           onPress={() =>
-            Alert.alert("Delete yarn?", `"${existing?.colorway}" will be removed.`, [
-              { text: "Cancel", style: "cancel" },
+            Alert.alert(t("yarn.deleteTitle"), t("yarn.deleteBody", { name: existing?.colorway ?? "" }), [
+              { text: t("common.cancel"), style: "cancel" },
               {
-                text: "Delete",
+                text: t("common.delete"),
                 style: "destructive",
                 onPress: () => {
                   deleteFile(existing?.photoUri);
@@ -142,7 +145,7 @@ export default function YarnEditor() {
           }
         />
       )}
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }
 

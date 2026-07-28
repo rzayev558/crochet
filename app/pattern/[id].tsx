@@ -3,7 +3,7 @@ import * as DocumentPicker from "expo-document-picker";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   createPattern,
@@ -11,18 +11,20 @@ import {
   patternByIdQuery,
   updatePattern,
 } from "../../src/db/queries";
+import { useT } from "../../src/i18n";
+import { KeyboardAwareScrollView } from "../../src/keyboard";
 import { deleteFile, persistFile } from "../../src/media";
 import { colors, radius, spacing, type } from "../../src/theme";
 import { Chips, Field, GhostButton, PhotoPicker, PrimaryButton } from "../../src/ui";
 
-const CRAFTS = [
-  { label: "Crochet", value: "crochet" },
-  { label: "Knit", value: "knit" },
-];
-
 export default function PatternEditor() {
+  const t = useT();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const CRAFTS = [
+    { label: t("craft.crochet"), value: "crochet" },
+    { label: t("craft.knit"), value: "knit" },
+  ];
   const insets = useSafeAreaInsets();
   const isNew = id === "new";
 
@@ -82,25 +84,25 @@ export default function PatternEditor() {
   const openLink = () => {
     const url = sourceUrl.trim();
     if (/^https?:\/\//i.test(url)) Linking.openURL(url);
-    else Alert.alert("Add a full link", "Include https:// so we can open it.");
+    else Alert.alert(t("pattern.fullLinkTitle"), t("pattern.fullLinkBody"));
   };
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={{ padding: spacing.md, paddingBottom: insets.bottom + spacing.xl }}>
-      <Stack.Screen options={{ title: isNew ? "Add pattern" : "Edit pattern" }} />
+    <KeyboardAwareScrollView style={styles.screen} contentContainerStyle={{ padding: spacing.md, paddingBottom: insets.bottom + spacing.xl }}>
+      <Stack.Screen options={{ title: isNew ? t("pattern.addTitle") : t("pattern.editTitle") }} />
 
       <PhotoPicker uri={photoUri} onChange={setPhotoUri} height={160} />
 
-      <Field label="Title" value={title} onChangeText={setTitle} placeholder="e.g. Granny Square Blanket" />
-      <Chips label="Craft" options={CRAFTS} value={craft} onChange={setCraft} />
+      <Field label={t("pattern.title")} value={title} onChangeText={setTitle} placeholder={t("pattern.titlePlaceholder")} />
+      <Chips label={t("pattern.craft")} options={CRAFTS} value={craft} onChange={setCraft} />
 
       {/* Attached file */}
-      <Text style={styles.fieldLabel}>Pattern file</Text>
+      <Text style={styles.fieldLabel}>{t("pattern.file")}</Text>
       {fileUri ? (
         <View style={styles.fileRow}>
           <Ionicons name="document-text" size={22} color={colors.primary} />
           <Text style={styles.fileName} numberOfLines={1}>
-            {fileName ?? "Attached file"}
+            {fileName ?? t("pattern.attachedFile")}
           </Text>
           <Pressable
             hitSlop={10}
@@ -116,12 +118,12 @@ export default function PatternEditor() {
       ) : (
         <Pressable style={styles.importBtn} onPress={importFile}>
           <Ionicons name="cloud-upload-outline" size={20} color={colors.primary} />
-          <Text style={styles.importText}>Import a PDF or image</Text>
+          <Text style={styles.importText}>{t("pattern.import")}</Text>
         </Pressable>
       )}
 
       <Field
-        label="Source link"
+        label={t("pattern.sourceLink")}
         value={sourceUrl}
         onChangeText={setSourceUrl}
         placeholder="https://…"
@@ -131,24 +133,24 @@ export default function PatternEditor() {
       {sourceUrl.trim().length > 0 && (
         <Pressable onPress={openLink} style={styles.openLink}>
           <Ionicons name="open-outline" size={16} color={colors.primary} />
-          <Text style={styles.openLinkText}>Open link</Text>
+          <Text style={styles.openLinkText}>{t("pattern.openLink")}</Text>
         </Pressable>
       )}
 
-      <Field label="Notes" value={notes} onChangeText={setNotes} multiline placeholder="Hook size, gauge, yardage…" />
+      <Field label={t("field.notes")} value={notes} onChangeText={setNotes} multiline placeholder={t("pattern.notesPlaceholder")} />
 
-      <PrimaryButton label={isNew ? "Save pattern" : "Save"} onPress={save} style={{ marginTop: spacing.xl }} />
+      <PrimaryButton label={isNew ? t("pattern.save") : t("common.save")} onPress={save} style={{ marginTop: spacing.xl }} />
 
       {!isNew && (
         <GhostButton
-          label="Delete pattern"
+          label={t("pattern.delete")}
           danger
           style={{ marginTop: spacing.sm }}
           onPress={() =>
-            Alert.alert("Delete pattern?", `"${existing?.title}" will be removed.`, [
-              { text: "Cancel", style: "cancel" },
+            Alert.alert(t("pattern.deleteTitle"), t("pattern.deleteBody", { name: existing?.title ?? "" }), [
+              { text: t("common.cancel"), style: "cancel" },
               {
-                text: "Delete",
+                text: t("common.delete"),
                 style: "destructive",
                 onPress: () => {
                   deleteFile(existing?.fileUri);
@@ -161,7 +163,7 @@ export default function PatternEditor() {
           }
         />
       )}
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }
 

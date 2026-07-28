@@ -6,10 +6,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { yarnsQuery } from "../../src/db/queries";
 import { FREE_LIMITS } from "../../src/entitlements/limits";
 import { useEntitlements } from "../../src/entitlements/store";
+import { useT } from "../../src/i18n";
 import { colors, radius, shadow, spacing, type } from "../../src/theme";
 import { EmptyState, Fab, FreeLimitBar } from "../../src/ui";
 
 export default function StashTab() {
+  const t = useT();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const isPlus = useEntitlements((s) => s.isPlus);
@@ -30,15 +32,15 @@ export default function StashTab() {
         <FreeLimitBar
           used={count}
           limit={FREE_LIMITS.yarns}
-          label="yarns"
+          label={t("units.yarns")}
           onUpgrade={() => router.push("/paywall?reason=yarns")}
         />
       )}
       {(yarns?.length ?? 0) === 0 ? (
         <EmptyState
           emoji="🧵"
-          title="Your yarn stash"
-          body="Keep track of every skein — brand, colorway, weight and how much you have left. Snap a photo so you can match colors on the go."
+          title={t("stash.emptyTitle")}
+          body={t("stash.emptyBody")}
         />
       ) : (
         <FlatList
@@ -64,18 +66,20 @@ export default function StashTab() {
                   {item.colorway}
                 </Text>
                 <Text style={styles.sub} numberOfLines={1}>
-                  {[item.brand, item.weight].filter(Boolean).join(" · ") || "Yarn"}
+                  {[item.brand, item.weight].filter(Boolean).join(" · ") || t("stash.yarnFallback")}
                 </Text>
               </View>
               <View style={styles.skeinPill}>
                 <Text style={styles.skeinNum}>{item.skeins}</Text>
-                <Text style={styles.skeinLabel}>{item.skeins === 1 ? "skein" : "skeins"}</Text>
+                <Text style={styles.skeinLabel}>
+                  {item.skeins === 1 ? t("stash.skeinOne") : t("stash.skeinOther")}
+                </Text>
               </View>
             </Pressable>
           )}
         />
       )}
-      <Fab label="Add yarn" onPress={addYarn} bottom={insets.bottom + spacing.lg} />
+      <Fab label={t("stash.addYarn")} onPress={addYarn} bottom={insets.bottom + spacing.lg} />
     </View>
   );
 }

@@ -1,10 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs, useRouter } from "expo-router";
 import { Pressable } from "react-native";
+import { useT } from "../../src/i18n";
 import { colors, spacing, type } from "../../src/theme";
 
 export default function TabsLayout() {
   const router = useRouter();
+  const t = useT();
   return (
     <Tabs
       screenOptions={{
@@ -37,7 +39,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Projects",
+          title: t("tabs.projects"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="albums-outline" size={size} color={color} />
           ),
@@ -46,7 +48,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="stash"
         options={{
-          title: "Stash",
+          title: t("tabs.stash"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="color-palette-outline" size={size} color={color} />
           ),
@@ -55,9 +57,18 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="patterns"
         options={{
-          title: "Patterns",
+          title: t("tabs.patterns"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="document-text-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="learn"
+        options={{
+          title: t("tabs.learn"),
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="school-outline" size={size} color={color} />
           ),
         }}
       />

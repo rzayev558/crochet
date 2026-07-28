@@ -7,10 +7,11 @@ import {
   Pressable,
   StyleSheet,
   Text,
-  TextInput,
   TextInputProps,
   View,
 } from "react-native";
+import { useT } from "./i18n";
+import { KeyboardAwareTextInput } from "./keyboard";
 import { persistFile } from "./media";
 import { colors, radius, shadow, spacing, type } from "./theme";
 
@@ -64,7 +65,7 @@ export function Field({
   return (
     <View style={{ marginTop: spacing.md }}>
       <Text style={styles.fieldLabel}>{label}</Text>
-      <TextInput
+      <KeyboardAwareTextInput
         style={[styles.input, props.multiline && { minHeight: 90, textAlignVertical: "top" }]}
         placeholderTextColor={colors.textFaint}
         {...props}
@@ -144,9 +145,11 @@ export function FreeLimitBar({
 }: {
   used: number;
   limit: number;
+  /** Already-localized plural unit, e.g. t("units.projects"). */
   label: string;
   onUpgrade: () => void;
 }) {
+  const t = useT();
   const atLimit = used >= limit;
   return (
     <Pressable
@@ -159,9 +162,9 @@ export function FreeLimitBar({
         color={atLimit ? colors.primaryDark : colors.textMuted}
       />
       <Text style={[styles.limitText, atLimit && { color: colors.primaryDark }]}>
-        {used} of {limit} free {label}
+        {t("freeLimit.bar", { used, limit, label })}
       </Text>
-      <Text style={styles.limitUpgrade}>Upgrade</Text>
+      <Text style={styles.limitUpgrade}>{t("freeLimit.upgrade")}</Text>
     </Pressable>
   );
 }

@@ -10,23 +10,28 @@ import migrations from "../drizzle/migrations";
 import { db } from "../src/db/client";
 import { migrateLegacyCountersIfNeeded } from "../src/db/queries";
 import { useEntitlements } from "../src/entitlements/store";
+import { useLanguage, useT } from "../src/i18n";
 import { Onboarding } from "../src/onboarding";
 import { colors, spacing, type } from "../src/theme";
 
 const ONBOARDED_KEY = "loop.onboarded.v1";
 
 export default function RootLayout() {
+  const t = useT();
   const { success, error } = useMigrations(db, migrations);
   const [legacyDone, setLegacyDone] = useState(false);
   const initEntitlements = useEntitlements((s) => s.init);
+  const initLanguage = useLanguage((s) => s.init);
+  const languageReady = useLanguage((s) => s.ready);
 
   // null = still loading the flag; false = show onboarding; true = go to app.
   const [onboarded, setOnboarded] = useState<boolean | null>(null);
 
   useEffect(() => {
     initEntitlements();
+    initLanguage();
     AsyncStorage.getItem(ONBOARDED_KEY).then((v) => setOnboarded(v === "1"));
-  }, [initEntitlements]);
+  }, [initEntitlements, initLanguage]);
 
   const finishOnboarding = () => {
     AsyncStorage.setItem(ONBOARDED_KEY, "1");
@@ -43,13 +48,13 @@ export default function RootLayout() {
         <StatusBar style="dark" />
         {error ? (
           <Gate>
-            <Text style={styles.err}>Couldn't open the database.</Text>
+            <Text style={styles.err}>{t("gate.dbError")}</Text>
             <Text style={styles.errSub}>{error.message}</Text>
           </Gate>
-        ) : !success || !legacyDone || onboarded === null ? (
+        ) : !success || !legacyDone || onboarded === null || !languageReady ? (
           <Gate>
             <ActivityIndicator color={colors.primary} size="large" />
-            <Text style={styles.loading}>Getting your projects ready…</Text>
+            <Text style={styles.loading}>{t("gate.loading")}</Text>
           </Gate>
         ) : !onboarded ? (
           <Onboarding onDone={finishOnboarding} />
@@ -69,20 +74,21 @@ export default function RootLayout() {
           >
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="project/[id]" options={{ title: "" }} />
-            <Stack.Screen name="counter/[id]" options={{ title: "", headerBackTitle: "Back" }} />
+            <Stack.Screen name="counter/[id]" options={{ title: "", headerBackTitle: t("common.back") }} />
             <Stack.Screen
               name="yarn/[id]"
-              options={{ presentation: "modal", title: "Yarn" }}
+              options={{ presentation: "modal", title: t("nav.yarn") }}
             />
             <Stack.Screen
               name="pattern/[id]"
-              options={{ presentation: "modal", title: "Pattern" }}
+              options={{ presentation: "modal", title: t("nav.pattern") }}
             />
+            <Stack.Screen name="lesson/[id]" options={{ title: "" }} />
             <Stack.Screen
               name="paywall"
               options={{ presentation: "modal", title: "" }}
             />
-            <Stack.Screen name="settings" options={{ title: "Settings" }} />
+            <Stack.Screen name="settings" options={{ title: t("nav.settings") }} />
           </Stack>
         )}
       </SafeAreaProvider>

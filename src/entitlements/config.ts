@@ -14,9 +14,18 @@
  * The rest of the app doesn't change — the entitlements store detects the key
  * and switches from the dev provider to RevenueCat automatically.
  */
-export const REVENUECAT_IOS_API_KEY = ""; // e.g. "appl_XXXXXXXXXXXXXXXXXXXX"
+// Public SDK key — designed to ship inside the client, not a secret.
+export const REVENUECAT_IOS_API_KEY = "test_fIWIWdWiobcEypwwvaAUCfyZRwo";
 
 export const PLUS_ENTITLEMENT_ID = "plus";
 
 /** True when a real key is present, so we should use RevenueCat. */
 export const REVENUECAT_ENABLED = REVENUECAT_IOS_API_KEY.trim().length > 0;
+
+/**
+ * RevenueCat's Test Store keys start with "test_". The SDK routes purchases by
+ * key prefix, so a "test_" key means simulated purchases that never touch
+ * StoreKit and earn nothing. RevenueCat rejects these in App Review, so this
+ * must never reach a store build — use the "appl_" key for anything shippable.
+ */
+export const REVENUECAT_IS_TEST_STORE = REVENUECAT_IOS_API_KEY.trim().startsWith("test_");

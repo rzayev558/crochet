@@ -12,18 +12,8 @@ export const FREE_LIMITS = {
 
 export type LimitKind = keyof typeof FREE_LIMITS;
 
-export const LIMIT_COPY: Record<LimitKind, { label: string; blurb: string }> = {
-  projects: { label: "projects", blurb: "Create unlimited projects" },
-  countersPerProject: { label: "counters", blurb: "Add as many counters as your pattern needs" },
-  yarns: { label: "yarns", blurb: "Catalogue your whole stash" },
-  patterns: { label: "patterns", blurb: "Save every pattern in one place" },
-};
-
-export const PLUS_BENEFITS = [
-  "Unlimited projects & counters",
-  "Unlimited yarn stash & patterns",
-  "Every future Plus feature included",
-];
+// Limit-reason copy and Plus benefit bullets are now localized — see the
+// translation keys `units.*`, `paywall.*`, and `plus.*` in src/i18n.
 
 /** Marketing prices shown in DEV mode (real prices come from the store). */
 export const DEV_PRICES = {
