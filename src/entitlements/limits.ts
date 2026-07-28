@@ -15,8 +15,13 @@ export type LimitKind = keyof typeof FREE_LIMITS;
 // Limit-reason copy and Plus benefit bullets are now localized — see the
 // translation keys `units.*`, `paywall.*`, and `plus.*` in src/i18n.
 
-/** Marketing prices shown in DEV mode (real prices come from the store). */
+/**
+ * Marketing prices shown in DEV mode (real prices come from the store).
+ *
+ * Bare amounts only — the paywall appends the billing period itself, so a
+ * period here would render as "$29.99 / year per year, billed annually".
+ */
 export const DEV_PRICES = {
-  monthly: "$4.99 / month",
-  yearly: "$29.99 / year",
+  monthly: "$4.99",
+  yearly: "$29.99",
 };

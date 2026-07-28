@@ -14,17 +14,7 @@ import { KeyboardAwareScrollView } from "../../src/keyboard";
 import { deleteFile } from "../../src/media";
 import { colors, radius, spacing, type } from "../../src/theme";
 import { Chips, Field, GhostButton, PhotoPicker, PrimaryButton, Stepper } from "../../src/ui";
-
-const WEIGHTS = [
-  { label: "Lace", value: "lace" },
-  { label: "Fingering", value: "fingering" },
-  { label: "Sport", value: "sport" },
-  { label: "DK", value: "dk" },
-  { label: "Worsted", value: "worsted" },
-  { label: "Aran", value: "aran" },
-  { label: "Bulky", value: "bulky" },
-  { label: "Super Bulky", value: "super_bulky" },
-];
+import { weightOptions } from "../../src/yarn";
 
 // A friendly starter palette for tagging a yarn's colour.
 const SWATCHES = [
@@ -94,7 +84,7 @@ export default function YarnEditor() {
       <Field label={t("yarn.colorway")} value={colorway} onChangeText={setColorway} placeholder={t("yarn.colorwayPlaceholder")} />
       <Field label={t("yarn.brand")} value={brand} onChangeText={setBrand} placeholder={t("yarn.brandPlaceholder")} />
 
-      <Chips label={t("yarn.weight")} options={WEIGHTS} value={weight} onChange={setWeight} />
+      <Chips label={t("yarn.weight")} options={weightOptions(t)} value={weight} onChange={setWeight} />
 
       <Field label={t("yarn.fiber")} value={fiber} onChangeText={setFiber} placeholder={t("yarn.fiberPlaceholder")} />
 

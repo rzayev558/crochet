@@ -83,6 +83,17 @@ export const en = {
   "craft.crochet": "Crochet",
   "craft.knit": "Knit",
 
+  // Yarn weights — the standard names, used in both languages by German
+  // crafters too, so the German column repeats them on purpose.
+  "weight.lace": "Lace",
+  "weight.fingering": "Fingering",
+  "weight.sport": "Sport",
+  "weight.dk": "DK",
+  "weight.worsted": "Worsted",
+  "weight.aran": "Aran",
+  "weight.bulky": "Bulky",
+  "weight.super_bulky": "Super Bulky",
+
   // Project detail
   "project.namePlaceholder": "Project name",
   "project.inProgress": "In progress",
@@ -315,6 +326,17 @@ export const de: Record<TranslationKey, string> = {
   // Craft labels
   "craft.crochet": "Häkeln",
   "craft.knit": "Stricken",
+
+  // Yarn weights — kept in the standard English naming, which German patterns
+  // and yarn labels use as well.
+  "weight.lace": "Lace",
+  "weight.fingering": "Fingering",
+  "weight.sport": "Sport",
+  "weight.dk": "DK",
+  "weight.worsted": "Worsted",
+  "weight.aran": "Aran",
+  "weight.bulky": "Bulky",
+  "weight.super_bulky": "Super Bulky",
 
   // Project detail
   "project.namePlaceholder": "Projektname",

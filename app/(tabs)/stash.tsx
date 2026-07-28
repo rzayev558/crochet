@@ -9,6 +9,7 @@ import { useEntitlements } from "../../src/entitlements/store";
 import { useT } from "../../src/i18n";
 import { colors, radius, shadow, spacing, type } from "../../src/theme";
 import { EmptyState, Fab, FreeLimitBar } from "../../src/ui";
+import { weightLabel } from "../../src/yarn";
 
 export default function StashTab() {
   const t = useT();
@@ -66,7 +67,8 @@ export default function StashTab() {
                   {item.colorway}
                 </Text>
                 <Text style={styles.sub} numberOfLines={1}>
-                  {[item.brand, item.weight].filter(Boolean).join(" · ") || t("stash.yarnFallback")}
+                  {[item.brand, weightLabel(t, item.weight)].filter(Boolean).join(" · ") ||
+                    t("stash.yarnFallback")}
                 </Text>
               </View>
               <View style={styles.skeinPill}>

@@ -40,6 +40,7 @@
     "typescript": "~6.0.3"
   },
   "scripts": {
+    "eas-build-pre-install": "node scripts/check-revenuecat-key.mjs",
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
