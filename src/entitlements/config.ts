@@ -1,21 +1,39 @@
 /**
  * RevenueCat configuration.
  *
- * Leave the key empty to run in DEV mode: entitlements are stored locally and
- * you can toggle "Loop Plus" from the Settings screen. This is what runs in
- * Expo Go, where native purchases aren't available.
+ * With no key resolved the app runs in DEV mode: entitlements are stored
+ * locally and you can toggle "Loop Plus" from the Settings screen. This is what
+ * runs in Expo Go, where native purchases aren't available.
  *
- * To go live with real App Store subscriptions:
- *   1. Create an app + products in RevenueCat (https://app.revenuecat.com)
- *   2. Paste the iOS public SDK key below (starts with "appl_")
- *   3. Name your entitlement "plus" (or change PLUS_ENTITLEMENT_ID)
- *   4. Build a dev client or EAS build (RevenueCat can't run in Expo Go)
+ * Real App Store subscriptions need, on top of the key below:
+ *   - products in App Store Connect, with the Paid Applications Agreement signed
+ *   - those products imported into RevenueCat and attached to the "plus"
+ *     entitlement, with one offering marked Current
+ *   - a dev client or EAS build (RevenueCat can't run in Expo Go)
+ *
+ * To buy without being charged, sign in to a sandbox tester on the device under
+ * Settings -> Developer -> Sandbox Apple Account.
  *
  * The rest of the app doesn't change — the entitlements store detects the key
  * and switches from the dev provider to RevenueCat automatically.
  */
-// Public SDK key — designed to ship inside the client, not a secret.
-export const REVENUECAT_IOS_API_KEY = "test_fIWIWdWiobcEypwwvaAUCfyZRwo";
+// Public SDK keys — designed to ship inside the client, not secrets.
+//
+// The App Store key is the default everywhere, so a dev build and a TestFlight
+// build exercise the same StoreKit path; only the sandbox-vs-production
+// environment differs, and Apple decides that from how the app was signed.
+//
+// The Test Store key is opt-in via the env var below. It simulates purchases
+// inside RevenueCat and never reaches StoreKit, which is the only way to buy
+// something in the iOS Simulator — but it validates none of the App Store
+// Connect setup. The SDK also refuses to run it in a release build: it shows a
+// "Wrong API Key" alert and terminates the app.
+//
+//   EXPO_PUBLIC_REVENUECAT_IOS_KEY=test_fIWIWdWiobcEypwwvaAUCfyZRwo npx expo start
+const APP_STORE_KEY = "appl_VRMUuQhPlafjvneGPpIcxRqwrQI";
+
+export const REVENUECAT_IOS_API_KEY =
+  process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY?.trim() || APP_STORE_KEY;
 
 export const PLUS_ENTITLEMENT_ID = "plus";
 

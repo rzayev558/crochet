@@ -23,20 +23,28 @@ if (!profile) {
 }
 
 const source = readFileSync(CONFIG, "utf8");
-const match = source.match(/REVENUECAT_IOS_API_KEY\s*=\s*"([^"]*)"/);
+const match = source.match(/const APP_STORE_KEY\s*=\s*"([^"]*)"/);
 if (!match) {
-  console.error("[check-revenuecat-key] Could not find REVENUECAT_IOS_API_KEY in config.ts.");
+  console.error(
+    "[check-revenuecat-key] Could not find APP_STORE_KEY in config.ts. " +
+      "If the key declaration was renamed, update this check to match — a guard " +
+      "that can't find the key is the one case where failing the build is right."
+  );
   process.exit(1);
 }
 
-const key = match[1].trim();
+// Resolve the key exactly as config.ts does, or the check polices a value the
+// app won't actually use.
+const envKey = process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY?.trim();
+const key = envKey || match[1].trim();
+const origin = envKey ? "EXPO_PUBLIC_REVENUECAT_IOS_KEY" : "APP_STORE_KEY in config.ts";
 
 if (SHIPPING_PROFILES.has(profile) && key.startsWith("test_")) {
   console.error(
     `\n[check-revenuecat-key] Refusing to build profile "${profile}" with a RevenueCat ` +
-      `Test Store key ("${key.slice(0, 9)}…").\n` +
+      `Test Store key ("${key.slice(0, 9)}…", from ${origin}).\n` +
       `Test Store purchases are simulated, earn nothing, and are rejected in App Review.\n` +
-      `Set the "appl_" production key in src/entitlements/config.ts before building.\n`
+      `Use the "appl_" production key before building.\n`
   );
   process.exit(1);
 }
@@ -50,4 +58,6 @@ if (SHIPPING_PROFILES.has(profile) && key === "") {
   process.exit(1);
 }
 
-console.log(`[check-revenuecat-key] ok — profile "${profile}", key prefix "${key.slice(0, 5)}".`);
+console.log(
+  `[check-revenuecat-key] ok — profile "${profile}", key prefix "${key.slice(0, 5)}" from ${origin}.`
+);

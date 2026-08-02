@@ -91,7 +91,7 @@ export default function Paywall() {
           ),
         }}
       />
-      <ScrollView contentContainerStyle={{ padding: spacing.lg, paddingBottom: insets.bottom + 140 }}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
         <Text style={styles.hero}>🧶</Text>
         <Text style={styles.title}>{t("paywall.title")}</Text>
         {isPlus ? (
@@ -207,6 +207,13 @@ export default function Paywall() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
+  // The footer is a flex sibling below, not an overlay, so the scroll area is
+  // whatever height is left over. An absolutely positioned footer would need
+  // the content padding to match its height, and that height moves with the
+  // dev note, the locale, and the user's text size — the plan cards ended up
+  // stranded underneath it.
+  scroll: { flex: 1 },
+  scrollContent: { padding: spacing.lg },
   hero: { fontSize: 56, textAlign: "center", marginTop: spacing.md },
   title: { fontSize: 36, fontWeight: "800", color: colors.text, textAlign: "center", marginTop: spacing.sm },
   subtitle: {
@@ -240,10 +247,6 @@ const styles = StyleSheet.create({
   bestText: { color: colors.sage, fontWeight: "800", fontSize: 12 },
 
   footer: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
     backgroundColor: colors.bg,
     borderTopWidth: 1,
     borderTopColor: colors.border,
